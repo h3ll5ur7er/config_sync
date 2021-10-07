@@ -109,7 +109,7 @@ class EventStoreMerger:
             for event in more:
                 print(Event.__str__(event))
             print()
-        merged = ListOperations.order_by(missing, "timestamp"),  + ListOperations.order_by(more, "timestamp")
+        merged = ListOperations.order_by(missing, "timestamp")  + ListOperations.order_by(more, "timestamp")
         print(">>>merged:")
         for event in merged:
             print(Event.__str__(event))
