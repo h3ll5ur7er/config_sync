@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 from event_store_comparison_result import ComparisonResult
 from event_store_events import Event
 from event_store_model import EventStoreModel
@@ -10,6 +11,10 @@ class EventStoreInterface(ABC):
 
     @abstractmethod
     def get_hash(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delta_to(self, target_hash:str) -> List[Event]:
         raise NotImplementedError
 
     @abstractmethod
@@ -26,14 +31,6 @@ class EventStoreInterface(ABC):
 
     @abstractmethod
     def compare_hash(self, other:str) -> ComparisonResult:
-        raise NotImplementedError
-
-    @abstractmethod
-    def serialize(self) -> EventStoreModel:
-        raise NotImplementedError
-
-    @abstractmethod
-    def deserialize(self, raw_data:EventStoreModel) -> 'EventStoreInterface':
         raise NotImplementedError
 
     @abstractmethod

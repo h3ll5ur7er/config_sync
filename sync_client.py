@@ -39,8 +39,7 @@ class SyncClient(Thread):
         
 
     def start_sync(self) -> bool:
-        message = DiscoveryMessage()
-        return self._sync(message.serialize(), self.handle_discovery_ack)
+        return self._sync(DiscoveryMessage().serialize(), self.handle_discovery_ack)
 
     def run(self):
         while True:

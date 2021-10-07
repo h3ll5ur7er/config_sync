@@ -2,10 +2,13 @@
 from typing import List, Dict, Tuple
 
 from datetime import datetime as dt
+
 from event_store_comparison_result import ComparisonResult
 from event_store_model import EventStoreModel
-from event_store_events import Event
+from event_store_events import Event, RootEvent
 from event_store_interface import EventStoreInterface
+from event_store_merger import EventStoreMerger
+from event_store_serializer import EventStoreSerializer
 
 from settings import HASH_ALGORITHM
 
@@ -16,14 +19,20 @@ class EventStore(EventStoreInterface):
     state_timestamp:dt = None
 
     def __init__(self, state:dict=None, state_hash:str=None, state_timestamp:dt=None, events:List[Event]=None):
-        self.events = [] if events is None else events
+        self.events = [RootEvent()] if events is None else events
         self.state = {} if state is None else state
         self.state_hash = state_hash
         self.state_timestamp = state_timestamp
 
     def add_event(self, event:Event) -> int:
-        prev_hash = self.events[-1].hash if len(self.events) > 0 else ""
-        hash_input = str(prev_hash) + Event.__str__(event)
+        state = self.aggregate()
+        next_state = state.copy()
+        event.apply(next_state)
+        
+
+        # prev_hash = self.events[-1].hash if len(self.events) > 0 else ""
+        # hash_input = prev_hash + Event.__str__(event)
+        hash_input = EventStoreSerializer.serialize_state(next_state)
         event.hash = HASH_ALGORITHM(hash_input.encode("utf-8")).hexdigest()
         self.events.append(event)
         return event.hash
@@ -94,20 +103,6 @@ class EventStore(EventStoreInterface):
             return False
         return o.get_hash() == self.get_hash()
 
-    def serialize(self) -> EventStoreModel:
-        events = self.events.copy()
-        for index, event in enumerate(events):
-            event.index = index
-        return EventStoreModel(initial_state=self.state, initial_state_hash=self.state_hash, initial_state_timestamp=self.state_timestamp, events=events)
-
-    def deserialize(self, data:EventStoreModel) -> 'EventStore':
-        es = EventStore()
-        es.state = data.initial_state
-        es.state_hash = data.initial_state_hash
-        es.state_timestamp = data.initial_state_timestamp
-        es.events = data.events
-        return es
-
     def compare_event_store(self, other:'EventStore') -> ComparisonResult:
         if self.get_hash() == other.get_hash():
             return ComparisonResult.EQUAL
@@ -127,50 +122,7 @@ class EventStore(EventStoreInterface):
             return ComparisonResult.OLDER_OR_DIVERGING
 
     def update(self, other:'EventStore') -> None:
-        missing = None
-        more = None
-        if self.get_hash() == other.get_hash():
-            print(">this is in sync")
-            return
-
-        elif self.get_hash() in other.get_all_hashes():
-            print(">this is older")
-            missing = other.delta_to(self.get_hash())
-            print(">>>missing:")
-            for event in missing:
-                print(Event.__str__(event))
-            print()
-
-        elif other.get_hash() in self.get_all_hashes():
-            print(">this is newer")
-            more = self.delta_to(other.get_hash())
-            print(">>>more:")
-            for event in more:
-                print(Event.__str__(event))
-            print()
-
-        else:
-            print(">this is diverging")
-            print(">>self:  ", self.get_all_hashes())
-            print(">>other: ", other.get_all_hashes())
-            
-            common = None
-            for event in reversed(self.events):
-                if event.hash in other.get_all_hashes():
-                    common = event.hash
-                    break
-            if common is None:
-                raise ValueError("No common hash")
-            print(">>common: ", common)
-            missing = other.delta_to(common)
-            more = self.delta_to(common)
-            print(">>>missing:")
-            for event in missing:
-                print(Event.__str__(event))
-            print(">>>more:")
-            for event in more:
-                print(Event.__str__(event))
-            print()
+        EventStoreMerger.update(self, other)
 
     def load(self, event_store: EventStoreModel) -> None:
         pass
@@ -181,3 +133,4 @@ class EventStore(EventStoreInterface):
 
 
         
+

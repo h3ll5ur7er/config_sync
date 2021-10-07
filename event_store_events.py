@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime as dt
 from pydantic import BaseModel
-
+from settings import DEFAULT_HASH
 class Event(BaseModel):
     __args__ = ["key", "value"]
 
@@ -12,7 +12,7 @@ class Event(BaseModel):
     timestamp:Optional[dt] = None
     hash:Optional[str] = None
 
-    def __init__(self, key:str, value:str=None, timestamp:dt=None, hash:str=None, index:int=None, *a, **kw):
+    def __init__(self, key:str=None, value:str=None, timestamp:dt=None, hash:str=None, index:int=None, *a, **kw):
         super().__init__(key=key, value=value, timestamp=timestamp, hash=hash, index=index, *a, **kw)
         self.key = key
         self.value = value
@@ -20,11 +20,11 @@ class Event(BaseModel):
         self.hash = hash if hash else None
 
     def apply(self, state:dict) -> dict:
-        if self.type == "AddEvent":
-            AddEvent.apply(self, state)
-        elif self.type == "DeleteEvent":
-            DeleteEvent.apply(self, state)
-        elif self.type == "ModifyEvent":
+        # if self.type == "AddEvent":
+        #     AddEvent.apply(self, state)
+        # elif self.type == "DeleteEvent":
+        #     DeleteEvent.apply(self, state)
+        if self.type == "ModifyEvent":
             ModifyEvent.apply(self, state)
         else:
             raise NotImplementedError("Event.apply() must be implemented")
@@ -37,18 +37,25 @@ class Event(BaseModel):
         return f"{self} | {self.hash} | {self.timestamp}"
 
 
-class AddEvent(Event, BaseModel):
-    type = "AddEvent"
-    def apply(self, state:dict) -> dict:
-        state[self.key] = self.value
+# class AddEvent(Event, BaseModel):
+#     type = "AddEvent"
+#     def apply(self, state:dict) -> dict:
+#         state[self.key] = self.value
 
 class ModifyEvent(Event, BaseModel):
     type = "ModifyEvent"
     def apply(self, state:dict) -> dict:
         state[self.key] = self.value
 
-class DeleteEvent(Event, BaseModel):
-    type = "DeleteEvent"
+class RootEvent(Event, BaseModel):
+    type = "RootEvent"
+    def __init__(self):
+        super().__init__(key=None, value=None, timestamp=None, hash=DEFAULT_HASH, index=None)
     def apply(self, state:dict) -> dict:
-        del state[self.key]
+        pass
+
+# class DeleteEvent(Event, BaseModel):
+#     type = "DeleteEvent"
+#     def apply(self, state:dict) -> dict:
+#         del state[self.key]
 

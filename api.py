@@ -5,7 +5,8 @@ from typing import List
 from event_store_model import EventStoreModel
 from event_store_manager import EventStoreManager
 from event_store_mock_data import generate_events
-from event_store_events import AddEvent, ModifyEvent, DeleteEvent
+from event_store_events import ModifyEvent
+# from event_store_events import AddEvent, ModifyEvent, DeleteEvent
 
 from sync_client_repository import Client, ClientRepository
 from sync_server import SyncServer
@@ -38,12 +39,13 @@ async def get_all_values():
 async def read_entry(key:str):
     values = EventStoreManager().aggregate()
     if key not in values:
-        raise fastapi.HTTPException(status_code=404, detail="Item not found")
+        return None
     return values[key]
 
 @app.post("/value/{key}")
 async def create_entry(key:str, value:str):
-    EventStoreManager().add_event(AddEvent(key, value))
+    EventStoreManager().add_event(ModifyEvent(key, value))
+    # EventStoreManager().add_event(AddEvent(key, value))
     return EventStoreManager().get_hash()
 
 @app.put("/value/{key}")
@@ -53,7 +55,8 @@ async def update_entry(key:str, value:str):
 
 @app.delete("/value/{key}")
 async def delete_entry(key:str):
-    EventStoreManager().add_event(DeleteEvent(key))
+    EventStoreManager().add_event(ModifyEvent(key, None))
+    # EventStoreManager().add_event(DeleteEvent(key))
     return EventStoreManager().get_hash()
 
 @app.post("/compress/{target_hash}")
