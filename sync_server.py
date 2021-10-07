@@ -2,7 +2,8 @@ from threading import Thread
 from socketserver import UDPServer, BaseRequestHandler
 from datetime import datetime as dt
 from sync_client_repository import ClientRepository
-from event_store import ComparisonResult, EventStoreManager
+from event_store_comparison_result import ComparisonResult
+from event_store_manager import EventStoreManager
 from sync_messages import MessageParser, DiscoveryMessage, DiscoveryAckMessage
 from swagger_client import DefaultApi
 

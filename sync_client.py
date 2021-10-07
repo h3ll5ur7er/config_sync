@@ -7,7 +7,7 @@ from sync_messages import DiscoveryMessage, DiscoveryAckMessage, MessageParser
 from datetime import datetime as dt, timedelta as td
 
 class SyncClient(Thread):
-    def __init__(self, port:int=54321, broadcast_addr:str="255.255.255.255", time_between_sync:td=td(seconds=10), time_between_retry:td=td(seconds=5), polling_interval_seconds:int=3):
+    def __init__(self, port:int=54321, broadcast_addr:str="192.168.1.255", time_between_sync:td=td(seconds=10), time_between_retry:td=td(seconds=5), polling_interval_seconds:int=3):
         super().__init__()
         self.port = port
         self.broadcast_addr = broadcast_addr

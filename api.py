@@ -2,11 +2,12 @@ import fastapi
 from fastapi.routing import APIRoute
 from typing import List
 
-from event_store import EventStoreManager, EventStoreModel
+from event_store_model import EventStoreModel
+from event_store_manager import EventStoreManager
 from event_store_mock_data import generate_events
 from event_store_events import AddEvent, ModifyEvent, DeleteEvent
-from sync_client_repository import Client, ClientRepository
 
+from sync_client_repository import Client, ClientRepository
 from sync_server import SyncServer
 from sync_client import SyncClient
 

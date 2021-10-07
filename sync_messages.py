@@ -1,7 +1,7 @@
 from typing import List
 from typing_extensions  import Protocol
 from struct import pack, unpack
-from event_store import EventStoreManager
+from event_store_manager import EventStoreManager
 from datetime import datetime as dt
 
 from sync_client_repository import ClientRepository

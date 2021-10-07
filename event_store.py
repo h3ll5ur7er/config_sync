@@ -1,30 +1,15 @@
 
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 
-from pydantic.main import BaseModel
-from helpers import Singleton
 from datetime import datetime as dt
-from json import dumps, loads
+from event_store_comparison_result import ComparisonResult
+from event_store_model import EventStoreModel
 from event_store_events import Event
-from pprint import pprint
-from enum import Enum, auto
+from event_store_interface import EventStoreInterface
+
 from settings import HASH_ALGORITHM
 
-
-class EventStoreModel(BaseModel):
-    initial_state:Optional[Dict[str,str]] = None
-    initial_state_hash:Optional[str] = None
-    initial_state_timestamp:Optional[dt] = None
-    events:Optional[List[Event]] = None
-
-class ComparisonResult(str, Enum):
-    EQUAL = "EQUAL"
-    OLDER = "OLDER"
-    NEWER = "NEWER"
-    DIVERGING = "DIVERGING"
-    OLDER_OR_DIVERGING = "OLDER_OR_DIVERGING"
-
-class EventStore:
+class EventStore(EventStoreInterface):
     events:List[Event] = None
     state:Dict[str,str] = None
     state_hash:str = None
@@ -38,7 +23,7 @@ class EventStore:
 
     def add_event(self, event:Event) -> int:
         prev_hash = self.events[-1].hash if len(self.events) > 0 else ""
-        hash_input = str(prev_hash) + str(event)
+        hash_input = str(prev_hash) + Event.__str__(event)
         event.hash = HASH_ALGORITHM(hash_input.encode("utf-8")).hexdigest()
         self.events.append(event)
         return event.hash
@@ -153,7 +138,7 @@ class EventStore:
             missing = other.delta_to(self.get_hash())
             print(">>>missing:")
             for event in missing:
-                print(event)
+                print(Event.__str__(event))
             print()
 
         elif other.get_hash() in self.get_all_hashes():
@@ -161,7 +146,7 @@ class EventStore:
             more = self.delta_to(other.get_hash())
             print(">>>more:")
             for event in more:
-                print(event)
+                print(Event.__str__(event))
             print()
 
         else:
@@ -181,11 +166,14 @@ class EventStore:
             more = self.delta_to(common)
             print(">>>missing:")
             for event in missing:
-                print(event)
+                print(Event.__str__(event))
             print(">>>more:")
             for event in more:
-                print(event)
+                print(Event.__str__(event))
             print()
+
+    def load(self, event_store: EventStoreModel) -> None:
+        pass
         # TODO: do better
         # if missing is not None:
         #     for event in missing:
@@ -193,47 +181,3 @@ class EventStore:
 
 
         
-
-class EventStoreManager(metaclass=Singleton):
-    event_store:EventStore = None
-    def __init__(self):
-        self.event_store = EventStore()
-
-    def add_event(self, event:Event) -> int:
-        return self.event_store.add_event(event)
-
-    def get_hash(self) -> str:
-        return self.event_store.get_hash()
-
-    def aggregate(self, target_hash:int=None) -> dict:
-        return self.event_store.aggregate(target_hash)
-    
-    def compress(self, target_hash:int=None) -> None:
-        return self.event_store.compress(target_hash)
-
-    def __str__(self) -> str:
-        return str(self.event_store)
-
-    def compare_event_store(self, other:EventStore) -> ComparisonResult:
-        return self.event_store.compare_event_store(other)
-
-    def compare_hash(self, other:str) -> ComparisonResult:
-        return self.event_store.compare_hash(other)
-
-    def serialize(self) -> EventStoreModel:
-        return self.event_store.serialize()
-    
-    def deserialize(self, raw_data:EventStoreModel) -> EventStore:
-        return self.event_store.deserialize(raw_data)
-
-    def set_event_store(self, event_store:EventStore) -> None:
-        self.event_store = event_store
-
-    def load(self, event_store:EventStoreModel) -> None:
-        other = EventStore().deserialize(event_store)
-        self.event_store = other
-
-    def update(self, event_store:EventStoreModel) -> None:
-        other = EventStore().deserialize(event_store)
-        self.event_store.update(other)
-

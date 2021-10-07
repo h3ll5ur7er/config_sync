@@ -30,7 +30,7 @@ class Event(BaseModel):
             raise NotImplementedError("Event.apply() must be implemented")
 
     def __str__(self) -> str:
-        arguments = [f"{arg}={getattr(self, arg)}" for arg in self.__args__ if hasattr(self, arg) and getattr(self, arg)]
+        arguments = [f"{arg}={getattr(self, arg)}" for arg in Event.__args__ if hasattr(self, arg) and getattr(self, arg)]
         return f"{self.type}({', '.join(arguments)})"
 
     def __repr__(self) -> str:
