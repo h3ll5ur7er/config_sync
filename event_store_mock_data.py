@@ -1,6 +1,6 @@
 
 from event_store import EventStoreManager
-from events import AddEvent, DeleteEvent, ModifyEvent
+from event_store_events import AddEvent, DeleteEvent, ModifyEvent
 
 def generate_events():
     EventStoreManager().add_event(AddEvent("a", 1))

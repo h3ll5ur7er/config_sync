@@ -4,7 +4,7 @@ from typing import List
 
 from event_store import EventStoreManager, EventStoreModel
 from event_store_mock_data import generate_events
-from events import AddEvent, ModifyEvent, DeleteEvent
+from event_store_events import AddEvent, ModifyEvent, DeleteEvent
 from sync_client_repository import Client, ClientRepository
 
 from sync_server import SyncServer
@@ -19,6 +19,7 @@ sync_client = SyncClient()
 async def startup_event():
     sync_server.start()
     sync_client.start()
+    await setup()
 
 @app.get("/hash")
 async def get_hash():
@@ -64,12 +65,12 @@ async def serialize():
     return EventStoreManager().serialize()
 
 @app.post("/compare/event_store")
-async def compare(serialized:EventStoreModel):
+async def compare_event_store(serialized:EventStoreModel):
     other = EventStoreManager().deserialize(serialized)
     return EventStoreManager().compare_event_store(other)
 
 @app.post("/compare/hash/{hash}")
-async def compare(hash:str):
+async def compare_hash(hash:str):
     return EventStoreManager().compare_hash(hash)
 
 @app.post("/load")

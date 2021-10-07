@@ -5,7 +5,7 @@ from pydantic.main import BaseModel
 from helpers import Singleton
 from datetime import datetime as dt
 from json import dumps, loads
-from events import Event
+from event_store_events import Event
 from pprint import pprint
 from enum import Enum, auto
 from settings import HASH_ALGORITHM
@@ -146,7 +146,6 @@ class EventStore:
         more = None
         if self.get_hash() == other.get_hash():
             print(">this is in sync")
-            print()
             return
 
         elif self.get_hash() in other.get_all_hashes():
@@ -167,6 +166,9 @@ class EventStore:
 
         else:
             print(">this is diverging")
+            print(">>self:  ", self.get_all_hashes())
+            print(">>other: ", other.get_all_hashes())
+            
             common = None
             for event in reversed(self.events):
                 if event.hash in other.get_all_hashes():
@@ -174,6 +176,7 @@ class EventStore:
                     break
             if common is None:
                 raise ValueError("No common hash")
+            print(">>common: ", common)
             missing = other.delta_to(common)
             more = self.delta_to(common)
             print(">>>missing:")
@@ -184,9 +187,9 @@ class EventStore:
                 print(event)
             print()
         # TODO: do better
-        if missing is not None:
-            for event in missing:
-                self.add_event(event)
+        # if missing is not None:
+        #     for event in missing:
+        #         self.add_event(event)
 
 
         

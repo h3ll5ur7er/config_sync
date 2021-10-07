@@ -1,6 +1,6 @@
 import unittest
 from event_store import EventStore
-from events import AddEvent, DeleteEvent, ModifyEvent
+from event_store_events import AddEvent, DeleteEvent, ModifyEvent
 
 class TestEventStore(unittest.TestCase):
     event_store: EventStore

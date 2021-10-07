@@ -11,7 +11,7 @@ class Client(BaseModel):
     active:Optional[bool] = True
     last_seen:Optional[dt] = None
     def probe(self):
-        self.active = os.system("ping -c 1 " + self.ip) is 0
+        self.active = os.system("ping -c 1 " + self.ip) == 0
     def __str__(self) -> str:
         return f"{1 if self.active else 0} {self.hash} {self.ip}\t{self.last_seen}"
 
@@ -27,6 +27,9 @@ class ClientRepository(metaclass=Singleton):
             if hash != DEFAULT_HASH:
                 self._clients[ip].hash = hash
                 self._clients[ip].last_seen = dt.now()
+
+    def __getitem__(self, key:str) -> Client:
+        return self._clients.get(key, None)
 
     def clients(self) -> List[Client]:
         return list(self._clients.values())
@@ -48,5 +51,9 @@ class ClientRepository(metaclass=Singleton):
 
     def __str__(self) -> str:
         return "\n".join(map(str, self._clients.values()))
+    
+    def probe(self):
+        for client in self.clients():
+            client.probe()
 
 
